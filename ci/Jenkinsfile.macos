@@ -1,0 +1,73 @@
+pipeline {
+  agent {
+    label 'macos'
+  }
+
+  options {
+    timestamps()
+    /* Prevent Jenkins jobs from running forever */
+    timeout(time: 40, unit: 'MINUTES')
+    /* manage how many builds we keep */
+    buildDiscarder(logRotator(
+      numToKeepStr: '20',
+      daysToKeepStr: '30',
+    ))
+  }
+
+  environment {
+    LANG     = "en_US.UTF-8"
+    LC_ALL   = "en_US.UTF-8"
+    LANGUAGE = "en_US.UTF-8"
+    /* Disable colors in Nim compiler logs */
+    NIM_PARAMS = "--colors:off"
+    /* Qt location is pre-defined */
+    QTDIR = "/usr/local/qt"
+    PATH = "${env.QTDIR}/clang_64/bin:${env.PATH}"
+  }
+
+  stages {
+    stage('Modules') {
+      steps { sh 'make update' }
+    }
+
+    stage('Deps') {
+      steps { sh 'make deps' }
+    }
+
+    stage('status-go') {
+      steps { sh 'make status-go' }
+    }
+
+    stage('Client') {
+      steps { sh 'make nim_status_client V=3' }
+    }
+
+    stage('Package') { steps {
+      withCredentials([
+        string(
+          credentialsId: 'macos-keychain-identity',
+          variable: 'MACOS_CODESIGN_IDENT'
+        ),
+        string(
+          credentialsId: 'macos-keychain-pass',
+          variable: 'MACOS_KEYCHAIN_PASS'
+        ),
+        file(
+          credentialsId: 'macos-keychain-file',
+          variable: 'MACOS_KEYCHAIN_FILE'
+        ),
+      ]) {
+        sh 'make pkg-macos V=3'
+      }
+    } }
+
+    stage('Archive') {
+      steps {
+        archiveArtifacts('bin/nim_status_client')
+      }
+    }
+  }
+  post {
+    always { cleanWs() }
+  }
+}

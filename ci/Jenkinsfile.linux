@@ -1,0 +1,71 @@
+pipeline {
+  agent {
+    docker { 
+      label 'linux'
+      image 'statusteam/nim-status-client-build:latest'
+      /* allows jenkins use cat */
+      args '--entrypoint="" --cap-add SYS_ADMIN --device /dev/fuse'
+    }
+  }
+
+  options {
+    timestamps()
+    /* Prevent Jenkins jobs from running forever */
+    timeout(time: 40, unit: 'MINUTES')
+    /* manage how many builds we keep */
+    buildDiscarder(logRotator(
+      numToKeepStr: '20',
+      daysToKeepStr: '30',
+    ))
+  }
+
+  environment {
+    LANG     = "en_US.UTF-8"
+    LC_ALL   = "en_US.UTF-8"
+    LANGUAGE = "en_US.UTF-8"
+    /* Disable colors in Nim compiler logs */
+    NIM_PARAMS = "--colors:off"
+    /* Verbosity of make targets */
+    V = "1"
+  }
+
+  stages {
+    stage('Modules') {
+      steps {
+        //cache(maxCacheSize: 250, caches: [[
+        //  $class: "ArbitraryFileCache",
+        //  excludes: "",
+        //  includes: "**/*",
+        //  path: "./vendor/nimbus-build-system/vendor/Nim/bin"
+        //]]) {
+        sh 'make update'
+      }
+    }
+
+    stage('Deps') {
+      steps { sh 'make deps' }
+    }
+
+    stage('status-go') {
+      steps { sh 'make status-go' }
+    }
+
+    stage('Client') {
+      steps { sh 'make nim_status_client' }
+    }
+
+    stage('Package') {
+      steps { sh 'make pkg-linux V=3' }
+    }
+
+    stage('Archive') {
+      steps {
+        archiveArtifacts('bin/nim_status_client')
+        archiveArtifacts('pkg/*.AppImage')
+      }
+    }
+  }
+  //post {
+  //  always { cleanWs() }
+  //}
+}
