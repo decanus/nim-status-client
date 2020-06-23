@@ -130,6 +130,7 @@ ScrollView {
             authorCurrentMsg: msgDelegate.ListView.section
             authorPrevMsg: msgDelegate.ListView.previousSection
             profileClick: profilePopup.openPopup.bind(profilePopup)
+            ensVerified: model.ensVerified
         }
     }
 
