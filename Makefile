@@ -53,7 +53,7 @@ else
  detected_OS := $(strip $(shell uname))
 endif
 
-ifeq ($(detected_OS), Darwin)
+ifeq ($(detected_OS),Darwin)
  BOTTLES_TARGET := bottles-macos
  PKG_TARGET := pkg-macos
  MACOSX_DEPLOYMENT_TARGET := 10.13
@@ -62,6 +62,9 @@ ifeq ($(detected_OS), Darwin)
  export CGO_CFLAGS
  CFLAGS := -mmacosx-version-min=10.13
  export CFLAGS
+else ifeq ($(detected_OS),Windows)
+ BOTTLES_TARGET := bottles-dummy
+ PKG_TARGET := pkg-windows
 else
  BOTTLES_TARGET := bottles-dummy
  PKG_TARGET := pkg-linux
@@ -94,7 +97,7 @@ $(BOTTLE_PCRE):
 bottles-macos: | $(BOTTLE_OPENSSL) $(BOTTLE_PCRE)
 	rm -rf bottles/Downloads
 
-ifeq ($(detected_OS), Darwin)
+ifeq ($(detected_OS),Darwin)
  NIM_PARAMS := $(NIM_PARAMS) -L:"-framework Foundation -framework Security -framework IOKit -framework CoreServices"
 endif
 
@@ -107,11 +110,15 @@ ifeq ($(QT5_PCFILEDIR),)
  ifeq ($(QTDIR),)
   $(error Can't find your Qt5 installation. Please run "$(MAKE) QTDIR=/path/to/your/Qt5/installation/prefix ...")
  else
-  ifeq ($(detected_OS), Darwin)
+  ifeq ($(detected_OS),Darwin)
    QT5_PCFILEDIR := $(QTDIR)/lib/pkgconfig
    QT5_LIBDIR := $(QTDIR)/lib
    # some manually installed Qt5 instances have wrong paths in their *.pc files, so we pass the right one to the linker here
    NIM_PARAMS += --passL:"-F$(QT5_LIBDIR)"
+  else ifeq ($(detected_OS),Windows)
+   QT5_PCFILEDIR := $(QTDIR)/lib/pkgconfig
+   QT5_LIBDIR := $(QTDIR)/lib
+   NIM_PARAMS += --passL:"-L$(QT5_LIBDIR)"
   else
    QT5_PCFILEDIR := $(QTDIR)/lib/pkgconfig
    QT5_LIBDIR := $(QTDIR)/lib
@@ -134,13 +141,17 @@ deps: | deps-common bottles
 
 update: | update-common
 
+ifeq ($(detected_OS),Windows)
+ CMAKE_PARAMS := -G"MinGW Makefiles" -DCMAKE_SH=CMAKE_SH-NOTFOUND -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_PREFIX_PATH=$(QTDIR)/lib/cmake
+endif
+
 $(DOTHERSIDE): | deps
 	echo -e $(BUILD_MSG) "DOtherSide"
 	+ cd vendor/DOtherSide && \
 		mkdir -p build && \
 		cd build && \
 		rm -f CMakeCache.txt && \
-		cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_DOCS=OFF -DENABLE_TESTS=OFF -DENABLE_DYNAMIC_LIBS=OFF -DENABLE_STATIC_LIBS=ON .. $(HANDLE_OUTPUT) && \
+		cmake $(CMAKE_PARAMS) -DCMAKE_BUILD_TYPE=Release -DENABLE_DOCS=OFF -DENABLE_TESTS=OFF -DENABLE_DYNAMIC_LIBS=OFF -DENABLE_STATIC_LIBS=ON .. $(HANDLE_OUTPUT) && \
 		$(MAKE) VERBOSE=$(V) $(HANDLE_OUTPUT)
 
 STATUSGO := vendor/status-go/build/bin/libstatus.a

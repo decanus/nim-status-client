@@ -25,6 +25,11 @@ if defined(macosx):
   switch("passL", "-Wl,-no_compact_unwind")
   # set the minimum supported macOS version to 10.13
   switch("passC", "-mmacosx-version-min=10.13")
+elif defined(windows):
+  --tlsEmulation:off
+  switch("passL", "-lcrypto")
+  switch("passL", "-lssl")
+  switch("passL", "-Wl,-as-needed")
 else:
   # dynamically link these libs, since we're opting out of dlopen()
   switch("passL", "-lcrypto")
