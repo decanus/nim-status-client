@@ -46,7 +46,7 @@ Rectangle {
       channelIdenticon: identicon
     }
 
-    Image {
+    SVGImage {
         id: channelIcon
         width: 16
         height: 16

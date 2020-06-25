@@ -168,7 +168,7 @@ Item {
         mipmap: true
         smooth: false
         antialiasing: true
-        
+
         MouseArea {
             cursorShape: Qt.PointingHandCursor
             anchors.fill: parent

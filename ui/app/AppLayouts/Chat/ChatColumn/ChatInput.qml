@@ -39,7 +39,7 @@ Rectangle {
                 color: parent.enabled ? Theme.blue : Theme.grey
                 radius: 50
             }
-            Image {
+            SVGImage {
                 source: "../../../img/arrowUp.svg"
                 width: 12
                 fillMode: Image.PreserveAspectFit

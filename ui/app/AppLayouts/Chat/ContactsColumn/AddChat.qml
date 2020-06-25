@@ -16,7 +16,7 @@ Rectangle {
     anchors.top: parent.top
     anchors.topMargin: 59
 
-    Image {
+    SVGImage {
         id: addChatLbl
         fillMode: Image.PreserveAspectFit
         source: "../../../img/plusSign.svg"
@@ -86,9 +86,7 @@ Rectangle {
             Action {
                 text: qsTr("Start group chat")
                 icon.source: "../../../img/group_chat.svg"
-                onTriggered: {
                 onTriggered: groupChatPopup.open()
-                }
             }
             Action {
                 text: qsTr("Join public chat")

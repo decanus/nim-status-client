@@ -14,7 +14,7 @@ Rectangle {
     anchors.top: parent.top
     anchors.topMargin: 59
 
-    Image {
+    SVGImage {
         id: addAccountLbl
         fillMode: Image.PreserveAspectFit
         source: "../../../img/plusSign.svg"
