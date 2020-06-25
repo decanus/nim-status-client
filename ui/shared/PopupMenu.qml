@@ -28,11 +28,12 @@ Menu {
                     id: popupMenuItemIcon
                     source: popupMenuItem.icon.source
                     visible: false
-                    width: 30
-                    height: 30
+                    width: 25
+                    height: 25
                 }
 
                 ColorOverlay {
+                    cached: true
                     anchors.fill: popupMenuItemIcon
                     anchors.verticalCenter: parent.verticalCenter
                     source: popupMenuItemIcon
