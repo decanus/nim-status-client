@@ -28,7 +28,7 @@ proc saveChat*(chatId: string, oneToOne: bool = false, active: bool = true, colo
       "active": active,
       "id": chatId,
       "unviewedMessagesCount": 0, # TODO:
-      "chatType":  if oneToOne: 1 else: 2,  # TODO: use constants
+      "chatType":  if oneToOne: ChatType.OneToOne else: ChatType.Public,
       "timestamp": 1588940692659  # TODO:
     }
   ])
