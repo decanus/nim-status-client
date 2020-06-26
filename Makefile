@@ -163,14 +163,18 @@ $(STATUSGO): | deps
 
 QRCODEGEN := vendor/QR-Code-generator/c/libqrcodegen.a
 
+ifeq ($(detected_OS),Windows)
+ QRCODEGEN_MAKE_PARAMS := CC=gcc
+endif
+
 $(QRCODEGEN): | deps
 	echo -e $(BUILD_MSG) "QR-Code-generator"
 	+ cd vendor/QR-Code-generator/c && \
-	  $(MAKE)
+	  $(MAKE) $(QRCODEGEN_MAKE_PARAMS)
 
 nim_status_client: | $(DOTHERSIDE) $(STATUSGO) $(QRCODEGEN) deps
 	echo -e $(BUILD_MSG) "$@" && \
-		$(ENV_SCRIPT) nim c $(NIM_PARAMS) --passL:"$(STATUSGO)" --passL:"$(QRCODEGEN)" --passL:"-lm" src/nim_status_client.nim
+		$(ENV_SCRIPT) nim c $(NIM_PARAMS) --passL:"$(STATUSGO)" --passL:"-lsetupapi -lhid" --passL:"$(QRCODEGEN)" --passL:"-lm" src/nim_status_client.nim
 
 _APPIMAGE_TOOL := appimagetool-x86_64.AppImage
 APPIMAGE_TOOL := tmp/linux/tools/$(_APPIMAGE_TOOL)
